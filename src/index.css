@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --font-jolly: "JollyGood Sans Black", "Comic Sans MS", cursive;
+}
+
+@font-face {
+  font-family: 'JollyGood Sans Black';
+  src: url('/fonts/JollyGoodSans.ttf') format('truetype'),
+       local('JollyGood Sans Black');
+}
+
+@layer base {
+  body {
+    @apply font-jolly bg-[#F0F4F8] text-[#2D3748] antialiased overflow-hidden;
+  }
+}
