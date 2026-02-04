@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Map, Marker, useMapsLibrary } from '@vis.gl/react-google-maps'
 import { calculateDistance, calculateScore } from '../utils/game'
-import confetti from 'canvas-confetti'
 
 const StreetView = ({ position, onLocationFound }) => {
   const ref = useRef(null)
@@ -12,7 +11,7 @@ const StreetView = ({ position, onLocationFound }) => {
     const service = new streetViewLib.StreetViewService()
     service.getPanorama({
       location: position,
-      radius: 500000,
+      radius: 1000,
       source: 'outdoor'
     }, (data, status) => {
       if (status === 'OK' && data.location && data.location.latLng) {
@@ -38,12 +37,13 @@ const Polyline = ({ path }) => {
   useEffect(() => {
     if (!mapsLib || !path) return
     if (polyRef.current) polyRef.current.setMap(null)
-    polyRef.current = new google.maps.Polyline({
+    polyRef.current = new mapsLib.Polyline({
       path,
       geodesic: true,
       strokeColor: '#6366f1',
       strokeOpacity: 1.0,
-      strokeWeight: 4
+      strokeWeight: 4,
+      map: window.googleMapInstance
     })
   }, [mapsLib, path])
 
@@ -68,7 +68,7 @@ export default function GameCanvas({ targetLocation, onNextRound, round }) {
 
   useEffect(() => {
     if (!geocodingLib || !actualPos || !hasGuessed) return
-    const geocoder = new google.maps.Geocoder()
+    const geocoder = new geocodingLib.Geocoder()
     geocoder.geocode({ location: actualPos }, (results, status) => {
       if (status === 'OK' && results[0]) {
         const addressParts = results[0].address_components
@@ -120,7 +120,6 @@ export default function GameCanvas({ targetLocation, onNextRound, round }) {
     setResult({ distance, score })
     setHasGuessed(true)
     setIsExpanded(true)
-    if (score > 4000) confetti()
   }
 
   const twemoji = (id) => `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/${id}.png`
@@ -156,6 +155,7 @@ export default function GameCanvas({ targetLocation, onNextRound, round }) {
           className="flex-1 overflow-hidden relative border-2 border-indigo-50"
         >
           <Map
+            onLoad={(map) => window.googleMapInstance = map}
             defaultCenter={{ lat: 20, lng: 0 }}
             defaultZoom={2}
             onClick={handleMapClick}
@@ -185,32 +185,30 @@ export default function GameCanvas({ targetLocation, onNextRound, round }) {
         </div>
       </div>
 
-{result && (
-  <div className="fixed inset-0 bg-white/20 flex items-center justify-center z-200 p-6 animate-in fade-in duration-300">
-    <div 
-      style={{ padding: '40px', borderRadius: '56px' }}
-      className="bg-white text-center animate-in zoom-in-95 fade-in duration-300 border-8 border-white max-w-sm w-full"
-    >
-      <img src={result.score > 4000 ? twemoji('1f973') : twemoji('1f622')} className="w-24 h-24 mx-auto mb-8" alt="emoji" />
-      
-      <div className="flex flex-col gap-4 mb-10">
-        <p className="text-gray-500 text-2xl font-bold tracking-tight">
-          {locationName ? `It was ${locationName}!` : 'Target Location'}
-        </p>
-        <h2 className="text-8xl text-indigo-600 leading-none">{result.score} pt</h2>
-        <p className="text-gray-400 text-3xl">{result.distance} km away</p>
-      </div>
-
-      <button 
-        onClick={onNextRound} 
-        style={{ borderRadius: '16px' }}
-        className="w-full py-5 bg-[#f0fdf4] text-[#166534] font-black text-4xl active:translate-y-1 transition-all uppercase tracking-tight hover:bg-[#dcfce7] flex items-center justify-center"
-      >
-        Next Round
-      </button>
-    </div>
-  </div>
-)}
+      {result && (
+        <div className="fixed inset-0 bg-white/20 flex items-center justify-center z-200 p-6 animate-in fade-in duration-300">
+          <div 
+            style={{ padding: '40px', borderRadius: '56px' }}
+            className="bg-white text-center animate-in zoom-in-95 fade-in duration-300 border-8 border-white max-w-sm w-full"
+          >
+            <img src={result.score > 4000 ? twemoji('1f973') : twemoji('1f622')} className="w-24 h-24 mx-auto mb-8" alt="emoji" />
+            <div className="flex flex-col gap-4 mb-10">
+              <p className="text-gray-500 text-2xl font-bold tracking-tight">
+                {locationName ? `It was ${locationName}!` : 'Target Location'}
+              </p>
+              <h2 className="text-8xl text-indigo-600 leading-none">{result.score} pt</h2>
+              <p className="text-gray-400 text-3xl">{result.distance} km away</p>
+            </div>
+            <button 
+              onClick={onNextRound} 
+              style={{ borderRadius: '16px' }}
+              className="w-full py-5 bg-[#f0fdf4] text-[#166534] font-black text-4xl active:translate-y-1 transition-all uppercase tracking-tight hover:bg-[#dcfce7] flex items-center justify-center"
+            >
+              Next Round
+            </button>
+          </div>
+        </div>
+      )}
 
       <div 
         style={{ padding: '16px 32px', borderRadius: '32px' }}
