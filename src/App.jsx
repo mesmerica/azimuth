@@ -5,7 +5,7 @@ import SettingsMenu from './components/SettingsMenu'
 import { generateRandomLocation } from './utils/game'
 
 export default function App() {
-  const [apiKey, setApiKey] = useState('')
+  const [apiKey, setApiKey] = useState(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '')
   const [targetLoc, setTargetLoc] = useState(generateRandomLocation())
   const [round, setRound] = useState(1)
 
